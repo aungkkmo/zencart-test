@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  db:
+    build: ./mariadb/
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: zencart_db
+      MYSQL_USER: zencart
+      MYSQL_PASSWORD: zencart
+    ports:
+      - "9906:3306"
+    networks: 
+      - zencart_network
+    container_name: mariadb-zencart
+    volumes:
+    - ./mariadb/dumps:/docker-entrypoint-initdb.d
+    # networks:
+    #   - frontend
+
+  web:
+    build: ./web/
+    volumes:
+      - ../:/var/www/html/
+      - ./web/apache.conf:/etc/apache2/sites-enabled/zencart.conf
+    ports:
+      - "8100:80"
+    links:
+      - db
+    networks: 
+      - zencart_network
+    environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: zencart_db
+        MYSQL_USER: zencart
+        MYSQL_PASSWORD: zencart
+        MYSQL_HOST: mariadb-zencart
+    container_name: zencart-apache-php
+    stdin_open: true
+    tty: true
+
+networks:
+  zencart_network:
